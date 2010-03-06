@@ -9,14 +9,21 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["hibariya"]
-  s.date = %q{2010-03-04}
+  s.date = %q{2010-03-06}
   s.description = %q{aozora bunko cui viewer}
   s.email = %q{celluloid.key@gmail.com}
+  s.files = [
+    "lib/aozora.rb"
+  ]
   s.homepage = %q{http://github.com/hibariya/aozora}
-  s.rdoc_options = ["--charset=UTF-8"]
+  s.rdoc_options = ["--main", "README.rdoc", "--exclude", "spec"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.3.6}
   s.summary = %q{aozora bunko cui viewer}
+  s.test_files = [
+    "spec/aozora_spec.rb",
+     "spec/spec_helper.rb"
+  ]
 
   if s.respond_to? :specification_version then
     current_version = Gem::Specification::CURRENT_SPECIFICATION_VERSION
