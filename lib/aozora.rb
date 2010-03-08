@@ -39,16 +39,84 @@ module Aozora
     end
   end
 
+  module Http
+    @agent = Mechanize.new
+    
+    class << self
+      def agent; @agent end
+
+      def fetch(uri)
+        page = nil
+        URI.parse(uri).open do |res|
+          page = res
+          yield res if block_given?
+        end
+        page
+      end
+    end
+  end
+
+  module Display
+
+    class << self
+
+      def ready
+        Readline.completion_proc = proc {|word|
+          Aozora::Command::COMMANDS.grep(/\A#{Regexp.quote word}/)
+        }
+        command = Aozora::Command.instance
+        while buf = Readline.readline('> ')
+          #Thread.fork do
+            puts command.exec(buf)
+          #end
+        end
+      end
+    end
+  end
+
+  class Command
+    def initialize
+      @history = []
+    end
+    
+    def exec(command)
+      @history<<command
+      command, args = command.split(' ')
+      self.__send__(['__', command.strip, '__'].join, args)
+    end
+
+    def __index__(args)
+      Aozora::Shelf.load if Aozora::Shelf.persons.empty?
+      Aozora::Shelf.persons.map{|p| [p.id, p.name].join(' ') }.join("\n")
+    end
+
+    def __list__(person_id)
+      Aozora::Shelf.load if Aozora::Shelf.persons.empty?
+      Aozora::Shelf.persons.find{|p| p.id==person_id.to_i}.works.map{|w| [w.id, w.title].join(' ') }.join("\n")
+    end
+
+    def __history__(args)
+      @history.join("\n")
+    end
+
+    __instance = self.new
+    (class << self; self end).
+      __send__(:define_method, :instance) { __instance }
+
+    COMMANDS = (self.instance_methods-(Object.instance_methods+%w[exec])).
+                map{|m|m.scan(/[^_]+/)}.flatten
+  end
+
   module Shelf
-    PERSONS_URI = 'http://www.aozora.gr.jp/index_pages/person_all.html'
-    PERSON_URI = 'http://www.aozora.gr.jp/index_pages/person%d.html'
-    WORK_BASE_URI = 'http://mirror.aozora.gr.jp/cards/%06d'
+    BASE_URI = 'http://www.aozora.gr.jp/'
+    PERSONS_URI = [BASE_URI, 'index_pages/person_all.html'].join
+    PERSON_URI = [BASE_URI, 'index_pages/person%d.html'].join
+    WORK_BASE_URI = [BASE_URI, 'cards/%06d'].join
     WORK_PAGE_URI = [WORK_BASE_URI, '/card%d.html'].join
     WORK_FILES_BASE_URI = [WORK_BASE_URI, '/files'].join
 
     @persons = []
     @works = []
-    @agent = Mechanize.new
 
     class Person
       attr_reader :name, :id, :initial_kana, :initial
@@ -66,7 +134,7 @@ module Aozora
       end 
 
       def load_works
-        Aozora::Shelf.agent.get(sprintf(PERSON_URI, @id)).search('a').
+        Aozora::Http.agent.get(sprintf(PERSON_URI, @id)).search('a').
           find_all{|t| t.attributes['href'].to_s =~ /cards/}.each{|tag|
           @works<<Work.new(:title=>tag.text.toutf8,
                            :id=>tag.attributes['href'].to_s.scan(/card([0-9]+)/).flatten.last,
@@ -93,7 +161,7 @@ module Aozora
       end 
       
       def load_fetch_uri
-        URI.parse(sprintf(WORK_PAGE_URI, @person.id, @id)).open do |page|
+        Aozora::Http.fetch(sprintf(WORK_PAGE_URI, @person.id, @id)) do |page|
           @fetch_uri = [
             sprintf(WORK_FILES_BASE_URI, @person.id),
             '/',
@@ -104,7 +172,7 @@ module Aozora
       end
 
       def load
-        URI.parse(load_fetch_uri.fetch_uri).open do |page|
+        Aozora::Http.fetch(load_fetch_uri.fetch_uri) do |page|
           Zip::Archive.open_buffer(page.read) do |archive|
             archive.fopen(archive.get_name(0)) do |file|
               @source = file.read.toutf8.gsub(/\r\n/, "\n")
@@ -120,7 +188,7 @@ module Aozora
       
       def load
         initial_kana = ''
-        agent.get(PERSONS_URI).search('a').find_all{|tag|
+        Aozora::Http.agent.get(PERSONS_URI).search('a').find_all{|tag|
           !tag.text.empty? &&
           (!tag.attributes['name'].nil? || tag.attributes['href'].to_s =~ /person[0-9]+/)
         }.each{|tag|
@@ -145,14 +213,17 @@ Aozora::Shelf.load
 #Aozora::Shelf.works.map{|wo| puts "person: #{wo.person.name}"; wo.person.works.map{|w| puts "title:#{w.title}" }}
 #puts Aozora::Shelf.works.first.fetch_uri
 #puts Aozora::Shelf.works.first.source
-puts Aozora::Shelf.persons.length
-Aozora::Shelf.persons.find_all{|p|p.id==879}.each{|p|
-  puts "#{p.initial_kana}, #{p.initial}, #{p.id}, #{p.name}"
-  puts '----------------------------'
-  p.works.each{|w|
-    puts "#{w.id}, #{w.title}"
-  }
-  puts '----------------------------'
-  puts p.works.find{|w| w.id==14}.load.source
-}
+
+#puts Aozora::Shelf.persons.length
+#Aozora::Shelf.persons.find_all{|p|p.id==879}.each{|p|
+#  puts "#{p.initial_kana}, #{p.initial}, #{p.id}, #{p.name}"
+#  puts '----------------------------'
+#  p.works.each{|w|
+#    puts "#{w.id}, #{w.title}"
+#  }
+#  puts '----------------------------'
+#  puts p.works.find{|w| w.id==14}.load.source
+#}
+
+Aozora::Display.ready
 
