@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 $KCODE = "u" unless Object.const_defined? :Encoding
-
+STDOUT.sync = true
 $:.unshift(File.dirname(__FILE__)) unless $:.include?(File.dirname(__FILE__)) ||
                                           $:.include?(File.expand_path(File.dirname(__FILE__)))
 require 'rubygems'
@@ -65,14 +65,34 @@ module Aozora
           Aozora::Command::COMMANDS.grep(/\A#{Regexp.quote word}/)
         }
         command = Aozora::Command.instance
-        while buf = Readline.readline('> ')
-          #Thread.fork do
+        begin
+          while buf = Readline.readline('> ')
+            #Thread.fork do
             puts command.exec(buf)
-          #end
+            #end
+          end
+        rescue SafeExit => f
+          puts f.message
+          exit
         end
       end
     end
   end
+
+  class Session
+    attr_accessor :person, :initial
+
+    def initialize
+      @person = nil
+      @initial = ''
+    end
+
+    __instance = self.new
+    (class << self; self end).
+      __send__(:define_method, :instance) { __instance }
+  end
+
+  class SafeExit < RuntimeError; end
 
   class Command
     def initialize
@@ -90,13 +110,28 @@ module Aozora
       Aozora::Shelf.persons.map{|p| [p.id, p.name].join(' ') }.join("\n")
     end
 
-    def __list__(person_id)
+    def __initial__(args)
       Aozora::Shelf.load if Aozora::Shelf.persons.empty?
-      Aozora::Shelf.persons.find{|p| p.id==person_id.to_i}.works.map{|w| [w.id, w.title].join(' ') }.join("\n")
+      Aozora::Shelf.persons.find_all{|p|p.initial==args.strip}.map{|p| [p.id, p.name].join(' ') }.join("\n")
+    end
+
+    def __take__(person_id)
+      Aozora::Shelf.load if Aozora::Shelf.persons.empty?
+      Aozora::Session.instance.person = Aozora::Shelf.persons.find{|p| p.id==person_id.to_i}
+      Aozora::Session.instance.person.works.map{|w| [w.id, w.title].join(' ') }.join("\n")
+    end
+
+    def __view__(work_id)
+      Aozora::Shelf.load if Aozora::Shelf.persons.empty?
+      Aozora::Session.instance.person.works.find{|w| w.id==work_id.to_i }.load.source
     end
 
     def __history__(args)
       @history.join("\n")
+    end
+
+    def __exit__(work_id)
+      raise SafeExit, 'finalizing...'
     end
 
     __instance = self.new
