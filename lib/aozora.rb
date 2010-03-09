@@ -11,6 +11,8 @@ require 'zipruby'
 require 'kconv'
 require 'csv'
 require 'readline'
+require 'pty'
+require 'expect'
 
 module Aozora
   VERSION = File.read(File.join(File.dirname(__FILE__), '../VERSION')).strip
@@ -68,8 +70,9 @@ module Aozora
         begin
           while buf = Readline.readline('> ')
             #Thread.fork do
-            puts command.exec(buf)
+            #puts command.exec(buf)
             #end
+            command.prepare(buf).call
           end
         rescue SafeExit => f
           puts f.message
@@ -98,47 +101,67 @@ module Aozora
     def initialize
       @history = []
     end
+
+    def before
+      Aozora::Shelf.load if Aozora::Shelf.persons.empty?
+    end
+
+    def prepared(args={})
+      args = {:contents=>'', :overflow=>:none}.merge(args)
+      lambda{system(["echo '#{args[:contents]}' ", args[:overflow]==:auto ? '|less' : ''].join)}
+    end
     
-    def exec(command)
+    def prepare(command)
       @history<<command
       command, args = command.split(' ')
-      self.__send__(['__', command.strip, '__'].join, args)
+      begin
+        self.__send__(['__', command.strip, '__'].join, args)
+      rescue NoMethodError
+        prepared(:contents=>"Command [#{command}] not executable.",
+                 :overflow=>:none)
+      end
     end
 
     def __index__(args)
-      Aozora::Shelf.load if Aozora::Shelf.persons.empty?
-      Aozora::Shelf.persons.map{|p| [p.id, p.name].join(' ') }.join("\n")
+      c = Aozora::Shelf.persons.map{|p| [p.id, p.name].join(' ') }.join("\n")
+      prepared(:contents=>c,
+               :overflow=>:auto)
     end
 
     def __initial__(args)
-      Aozora::Shelf.load if Aozora::Shelf.persons.empty?
-      Aozora::Shelf.persons.find_all{|p|p.initial==args.strip}.map{|p| [p.id, p.name].join(' ') }.join("\n")
+      c = Aozora::Shelf.persons.find_all{|p|p.initial==args.strip}.map{|p| [p.id, p.name].join(' ') }.join("\n")
+      prepared(:contents=>c,
+               :overflow=>:auto)
     end
 
     def __take__(person_id)
-      Aozora::Shelf.load if Aozora::Shelf.persons.empty?
       Aozora::Session.instance.person = Aozora::Shelf.persons.find{|p| p.id==person_id.to_i}
-      Aozora::Session.instance.person.works.map{|w| [w.id, w.title].join(' ') }.join("\n")
+      c = Aozora::Session.instance.person.works.map{|w| [w.id, w.title].join(' ') }.join("\n")
+      prepared(:contents=>c,
+               :overflow=>:auto)
     end
 
-    def __view__(work_id)
-      Aozora::Shelf.load if Aozora::Shelf.persons.empty?
-      Aozora::Session.instance.person.works.find{|w| w.id==work_id.to_i }.load.source
+    def __open__(work_id)
+      c = Aozora::Session.instance.person.works.find{|w| w.id==work_id.to_i }.load.source
+      prepared(:contents=>c,
+               :overflow=>:auto)
     end
 
     def __history__(args)
-      @history.join("\n")
+      c = @history.join("\n")
+      prepared(:contents=>c,
+               :overflow=>:none)
     end
 
     def __exit__(work_id)
-      raise SafeExit, 'finalizing...'
+      raise SafeExit, 'Finalizing...'
     end
 
     __instance = self.new
     (class << self; self end).
       __send__(:define_method, :instance) { __instance }
 
-    COMMANDS = (self.instance_methods-(Object.instance_methods+%w[exec])).
+    COMMANDS = (self.instance_methods-(Object.instance_methods+%w[prepare prepared before])).
                 map{|m|m.scan(/[^_]+/)}.flatten
   end
 
