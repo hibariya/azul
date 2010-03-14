@@ -14,6 +14,7 @@ require 'csv'
 require 'readline'
 require 'pty'
 require 'expect'
+require 'cgi'
 
 module Aozora
   VERSION = File.read(File.join(File.dirname(__FILE__), '../VERSION')).strip
@@ -22,24 +23,51 @@ module Aozora
   #CONF_FILE = File.join(Aozora::CONF_DIR, 'config')
   #$:.unshift(CONF_DIR)
 
-  module Reader
-    class << self
-    end
-  end
-
   module Http
+    CACHE_DIR = File.expand_path('~/.aozora')
     @agent = Mechanize.new
     
+    class << @agent
+      def cache(uri)
+        ::File.exist?([CACHE_DIR, ::CGI.escape(uri)].join('/'))? 
+          nil : Aozora::Http.create_cache(::CGI.escape(uri), get(uri).body)
+        get(['file://', CACHE_DIR, ::CGI.escape(uri)].join('/'))
+      end
+    end
+   
     class << self
       def agent; @agent end
 
       def fetch(uri)
-        page = nil
-        URI.parse(uri).open do |res|
-          page = res
-          yield res if block_given?
+        cache = ''
+        unless File.exist?(File.join(CACHE_DIR, ::CGI.escape(uri)))
+          URI.parse(uri).open do |res|
+            yield res if block_given?
+            create_cache(::CGI.escape(uri), res.read)
+            return res.read
+          end
+        else
+          File.open(File.join(CACHE_DIR, ::CGI.escape(uri)), 'r') do |res|
+            yield res if block_given?
+            return res.read
+          end
         end
-        page
+      end
+
+      def create_cache(fname, page)
+        Dir.mkdir(CACHE_DIR.read) unless File.exist?(CACHE_DIR)
+        File.open(File.join(CACHE_DIR, fname), 'w'){|f| f.puts page }
+        self
+      end
+
+      def clear_cache
+        Dir.entries(CACHE_DIR).inject([]){|r,c|
+          c.match(Regexp.quote(CGI.escape(Aozora::Shelf::BASE_URI)))?
+            r<<c:r
+        }.map{|file|
+          File.unlink(File.join(CACHE_DIR, file))
+          CGI.unescape(file)
+        }
       end
     end
   end
@@ -47,37 +75,34 @@ module Aozora
   module Display
 
     class << self
-
       def ready
         Readline.vi_editing_mode
         Readline.completion_proc = proc {|word|
           Aozora::Command::COMMANDS.grep(/\A#{Regexp.quote word}/)
         }
         command = Aozora::Command.instance
-        begin
-          while buf = Readline.readline('> ', true)
-            command.prepare(buf).call
-          end
-        rescue SafeExit => f
-          puts f.message
-          exit
+        command.prepare('h').call
+        while buf = Readline.readline('> ', true)
+          command.prepare(buf).call
         end
       end
     end
   end
 
-  class SafeExit < RuntimeError; end
-
   class Command 
     def initialize
       @history = []
       @session = {}
-      @current = {:width=>40}
+      @current = {:width=>60, :mode=>'vi'}
     end
 
     def before
       Aozora::Shelf.load if Aozora::Shelf.persons.empty?
       update(:content=>'', :args=>[], :pipes=>[])
+    end
+
+    def after
+      @current[:mode]=='vi'? Readline.vi_editing_mode : Readline.emacs_editing_mode
     end
 
     def prepared
@@ -88,7 +113,7 @@ module Aozora
                chunked
              }.flatten.join("\n"))
 
-        lambda{
+      lambda{
         system(["echo \"#{@current[:content]}\" ",
                @current[:pipes].empty? ? '' : ['|', @current[:pipes].join('|')].join].join)
       }
@@ -108,68 +133,131 @@ module Aozora
       command, *args = commands.to_s.split(/\s+/)
       return lambda{} if command.nil?
       begin
+        command = ['__', command, '__'].join
         before.update({:args=>args, :pipes=>pipes})
-        update(:content=>self.__send__(['__', command.strip, '__'].join))
-        @history<<[command, args, pipes.join('|')].join(' ')
-      rescue NoMethodError => e
-        update(:content=>"Command [#{command}] does not exist.")
+        unless self.respond_to?(command)
+          update(:content=>
+                 [__help__].unshift(line).
+                 unshift("Command [#{command.gsub(/_/, '')}] does not exist.").
+                 join("\n"))
+        else
+          update(:content=>self.__send__(command)).after
+          @history<<[command.gsub(/_/, ''), args, (!pipes.empty?? '|' : ''), pipes.join('|')].join(' ')
+        end
       rescue Exception => e
-        update(:content=>"Command [#{command}] failed(#{e.class}, #{e.message}).")
+        update(:content=>"Command [#{command.gsub(/_/, '')}] failed(#{e.class}, #{e.message}).")
       ensure
         return prepared
       end
     end
 
     def __index__
+      @current[:pipes]<<'less' if @current[:pipes].empty?
       @session[:persons],c = {},[]
       Aozora::Shelf.persons.each_with_index{|p,i|
         @session[:persons][atoz(i)] = p
-         c<<['[', atoz(i), '] ', p.name].join
+        c<<['[', atoz(i), '] ', p.name].join
       }
-      c.join("\n")
+      c.unshift(line).unshift("All #{c.length-1} persons listed.").join("\n")
     end
 
     def __initial__
+      raise ArgumentError, '1 argument required' if @current[:args].first.nil?
+      @current[:pipes]<<'less' if @current[:pipes].empty?
       @session[:persons],c = {},[]
       Aozora::Shelf.persons.find_all{|p|p.initial==@current[:args].first}.each_with_index{|p,i|
         @session[:persons][atoz(i)] = p
          c<<['[', atoz(i), '] ', p.name].join
       }
-      c.join("\n")
+      c.unshift(line).unshift("Initial #{@current[:args].first}: #{c.length-1} persons listed.").join("\n")
     end
 
     def __take__
-      @session[:works],c = {},[]
-      @session[:persons][@current[:args].first].works.each_with_index{|w,i| 
+      raise ArgumentError, '1 argument required' if @current[:args].first.nil?
+      @current[:pipes]<<'less' if @current[:pipes].empty?
+      @session[:works] = {}
+      @session[:person] = @session[:persons][@current[:args].first]
+      __list__
+    end
+
+    def __list__
+      @current[:pipes]<<'less' if @current[:pipes].empty?
+      c = []
+      @session[:person].works.each_with_index{|w,i| 
         @session[:works][atoz(i)] = w
         c<<['[', atoz(i), '] ', w.title].join
       }
-      c.join("\n")
+      c.unshift(line).unshift("#{@session[:person].name}: #{c.length-1} works listed.").join("\n")
     end
 
     def __open__
-      @session[:works][@current[:args].first].load.source
+      raise ArgumentError, '1 argument required' if @current[:args].first.nil?
+      @current[:pipes]<<'less' if @current[:pipes].empty?
+      [@session[:works][@current[:args].first].load.source].unshift(line).
+        unshift("Opening #{@session[:person].name} #{@session[:works][@current[:args].first].title}").
+        join("\n")
     end
 
     def __history__
-      @history.join("\n")
+      @history.unshift(line).unshift("#{@history.length-1} histories.").join("\n")
+    end
+
+    def __clear__
+      Aozora::Http.clear_cache.unshift(line).unshift('Cleaning caches...').join("\n")
     end
 
     def __exit__
-      raise SafeExit, 'Finalizing...'
+      'Finalizing...'
     end
 
     def __set__
+      raise ArgumentError, '2 argument required' unless @current[:args].length==2
       return if @current[@current[:args].first.intern].nil?
       @current[@current[:args].first.intern] = @current[:args].last
-      "width => #{@current[:args].last}"
+      "#{@current[:args].first} => #{@current[:args].last}"
     end
+
+    def __help__
+      [
+        ['Command', 'Summary'],
+        ['index, a', 'List all persons'],
+        ['initial, i', 'List persons by initial'],
+        ['take, t', 'Select a person and list works'],
+        ['list, l', 'List works that selected person'],
+        ['open, o', 'View a work'],
+        ['history, hi', 'View histories'],
+        ['clear, c', 'Crear all caches'],
+        ['exit, q', 'Exit'],
+        ['set, s', 'Set environment'],
+        ['help, h', 'View this help']
+      ].map{|c| sprintf('%20s  %35s', c.first, c.last) }.
+        unshift('Environments: width, mode').
+        unshift('Alias examples: [a], [b], [aa], [ab]...').
+        unshift('Initials: a, ka, sa, ta, na, ha, ma, ya, ra, wa').
+        unshift('Usage: command [[args] [[| unix command] | ...]').
+        join("\n")
+    end
+
+    def line
+      Array.new(@current[:width].to_i, '=').join
+    end
+    
+    alias __a__ __index__
+    alias __i__ __initial__
+    alias __t__ __take__
+    alias __l__ __list__
+    alias __o__ __open__
+    alias __hi__ __history__
+    alias __c__ __clear__
+    alias __q__ __exit__
+    alias __s__ __set__
+    alias __h__ __help__
 
     __instance = self.new
     (class << self; self end).
       __send__(:define_method, :instance) { __instance }
 
-    COMMANDS = (self.instance_methods-(Object.instance_methods+%w[prepare prepared before update atoz set])).
+    COMMANDS = (self.instance_methods-(Object.instance_methods+%w[prepare prepared before update atoz line])).
                 map{|m|m.scan(/[^_]+/)}.flatten
   end
 
@@ -201,7 +289,7 @@ module Aozora
       end 
 
       def load_works
-        Aozora::Http.agent.get(sprintf(PERSON_URI, @id)).search('a').
+        Aozora::Http.agent.cache(sprintf(PERSON_URI, @id)).search('a').
           find_all{|t| t.attributes['href'].to_s =~ /cards/}.each{|tag|
           @works<<Work.new(:title=>tag.text.toutf8,
                            :id=>tag.attributes['href'].to_s.scan(/card([0-9]+)/).flatten.last,
@@ -229,7 +317,6 @@ module Aozora
       
       def load_fetch_uri
         Aozora::Http.fetch(sprintf(WORK_PAGE_URI, @person.id, @id)) do |page|
-        #puts page.read.toutf8.scan(/href=['"]([0-9a-zA-Z_\-\.\/]+\.zip)['"]/mi).inspect
           @fetch_uri = [
             sprintf(WORK_FILES_BASE_URI, @person.id),
             '/',
@@ -256,7 +343,7 @@ module Aozora
       
       def load
         initial_kana = ''
-        Aozora::Http.agent.get(PERSONS_URI).search('a').find_all{|tag|
+        Aozora::Http.agent.cache(PERSONS_URI).search('a').find_all{|tag|
           !tag.text.empty? &&
           (!tag.attributes['name'].nil? || tag.attributes['href'].to_s =~ /person[0-9]+/)
         }.each{|tag|
@@ -274,5 +361,4 @@ module Aozora
   end
 end
 
-Aozora::Display.ready
 
