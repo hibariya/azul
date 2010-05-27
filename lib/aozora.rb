@@ -133,22 +133,27 @@ module Aozora
       command, *args = commands.to_s.split(/\s+/)
       return lambda{} if command.nil?
       begin
-        command = ['__', command, '__'].join
         before.update({:args=>args, :pipes=>pipes})
-        unless self.respond_to?(command)
-          update(:content=>
-                 [__help__].unshift(line).
-                 unshift("Command [#{command.gsub(/_/, '')}] does not exist.").
-                 join("\n"))
-        else
+        begin
           update(:content=>self.__send__(command)).after
-          @history<<[command.gsub(/_/, ''), args, (!pipes.empty?? '|' : ''), pipes.join('|')].join(' ')
+          @history<<[command, args, (!pipes.empty?? '|' : ''), pipes.join('|')].join(' ')
+        rescue NoMethodError => e
+          update(:content=>
+                 [help].unshift(line).
+                   unshift("Command [#{command}] does not exist.").
+                   join("\n"))
         end
       rescue Exception => e
-        update(:content=>"Command [#{command.gsub(/_/, '')}] failed(#{e.class}, #{e.message}).")
+        update(:content=>"Command [#{command}] failed(#{e.class}, #{e.message}).")
       ensure
         return prepared
       end
+    end
+
+    def method_missing(name, *args, &block)
+      guess = sprintf('__%s__', name)
+      return self.__send__(guess) if self.respond_to?(guess)
+      super
     end
 
     def __index__
@@ -257,7 +262,8 @@ module Aozora
     (class << self; self end).
       __send__(:define_method, :instance) { __instance }
 
-    COMMANDS = (self.instance_methods-(Object.instance_methods+%w[prepare prepared before update atoz line])).
+    COMMANDS = (self.instance_methods-
+                (Object.instance_methods+%w[method_missing prepare prepared before update atoz line])).
                 map{|m|m.scan(/[^_]+/)}.flatten
   end
 
