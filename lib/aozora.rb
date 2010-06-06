@@ -23,6 +23,7 @@ module Aozora
   __here = File.dirname __FILE__
   require File.join __here, 'aozora/config'
   require File.join __here, 'aozora/shelf'
+  require File.join __here, 'aozora/terminal'
 end
 
 
