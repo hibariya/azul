@@ -2,4 +2,4 @@
 
 require File.dirname(__FILE__)+'/../lib/aozora'
 
-Aozora::Display.ready
+Aozora::Terminal.ready
