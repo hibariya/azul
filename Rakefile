@@ -13,8 +13,7 @@ begin
 		gemspec.authors = %w(hibariya)
 		gemspec.has_rdoc = true
 		gemspec.rdoc_options = ["--main", "README.rdoc", "--exclude", "spec"]
-		#gemspec.executables = %w(aozora)
-	  gemspec.files = FileList['lib/**/*.rb']
+	  gemspec.files = FileList['lib/**/*.rb', 'VERSION', 'Rakefile']
 	end
 rescue LoadError
 	puts "Jeweler not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"
