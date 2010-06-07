@@ -12,6 +12,8 @@ module Aozora
       return @store[name] if args.empty?
       @store[name] = args.first
     end
+
+    def attributes; @store end
     
     __instance = self.new
     (class << self; self end).
@@ -20,12 +22,12 @@ module Aozora
 
   # set config defaults
   Config.start do
-    base_uri 'http://www.aozora.gr.jp/'
-    database_uri base_uri+'index_pages/list_person_all.zip'
-    person_uri base_uri+'cards/%s/'
+    #base_uri 'http://www.aozora.gr.jp/'
+    base_uri 'http://www.google.co.jp/'
+    database_path 'index_pages/list_person_all.zip'
+    person_path 'cards/%s/'
     card_file 'card%s.html'
     database_expire 86400
   end
-  load CONF_FILE if File.exist? CONF_FILE
   def self.config; Config.instance end
 end

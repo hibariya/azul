@@ -13,8 +13,9 @@ module Aozora
     end
 
     def fetch(work)
-      base = sprintf(Aozora.config.person_uri, work.person.id)
-      source_uri = URI.join(base, sprintf(Aozora.config.card_file, work.id.to_i)).
+      config = Aozora.config
+      base = sprintf(config.base_uri+config.person_path, work.person.id)
+      source_uri = URI.join(base, sprintf(config.card_file, work.id.to_i)).
         open{|f|f.read}.scan(/<a href=["']?([^'">]+\.zip)['">]/).flatten.first
       URI.join(base, source_uri).open do |source|
         Zip::Archive.open_buffer(source.read) do |archive|
@@ -73,10 +74,11 @@ module Aozora
 
     private
     def create_database
-      Zip::Archive.open_buffer(URI.parse(Aozora.config.database_uri).read) do |zip|
+      config = Aozora.config
+      Zip::Archive.open_buffer(URI.parse(config.base_uri+config.database_path).read) do |zip|
         zip.fopen(zip.get_name(0)) do |csv|
           data = csv.read.toutf8
-          Dir.mkdir(CACHE_DIR.read) unless File.directory?(CACHE_DIR)
+          Dir.mkdir(CACHE_DIR) unless File.directory?(CACHE_DIR)
           File.open(DATABASE_FILE, 'w') do |f|
             f.write data
           end
@@ -88,7 +90,7 @@ module Aozora
       File.open(DATABASE_FILE){|f| f.read }
     end
 
-    __instance = self.new.load
+    __instance = self.new
     (class << self; self end).
       __send__(:define_method, :open) { __instance }
 

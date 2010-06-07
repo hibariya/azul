@@ -12,7 +12,15 @@ module Aozora
 
         def take(args)
           shelf = Shelf.open
+          person = shelf.persons.find{|p|atoz(p.id.to_i)==args.first}
+          person.works.map{|w|"[#{atoz(w.id.to_i)}] #{w.title}"}.join "\n"
+        end
 
+        def open(args)
+          shelf = Shelf.open
+          work = shelf.works.find{|w|atoz(w.id.to_i)==args.first}
+          shelf.fetch work
+        
         end
 
         private
@@ -23,7 +31,8 @@ module Aozora
     end
 
     def self.ready
-      Shelf.open
+      load CONF_FILE if File.exist? CONF_FILE
+      Shelf.open.load
       Readline.vi_editing_mode
       Readline.completion_proc = lambda {|word|
         (Command.methods-methods).
@@ -32,7 +41,7 @@ module Aozora
       while buf = Readline.readline('> ', true)
         command, *pipes = buf.split(/\|/).map!{|m|m.strip}
         command, *args = command.split(/\s/).map!{|m|m.strip}
-        res = Command.__send__(command, args.flatten)
+        res = Command.__send__(command, args)
         system("echo \"#{res}\" "+
                (pipes.empty? ? '': '|'+pipes.join('|')))
       end
