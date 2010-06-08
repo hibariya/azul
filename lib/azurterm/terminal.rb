@@ -91,10 +91,10 @@ module Azurterm
 
       def ready
         config, shelf = config_default, Shelf.new.load
-        load CONF_FILE if File.exist? CONF_FILE
         shelf.config = config
         self.class.__send__(:define_method, :config){ config }
         self.class.__send__(:define_method, :shelf){ shelf }
+        load CONF_FILE if File.exist? CONF_FILE
 
         change_editing_mode config.editing_mode || 'emacs'
         change_color config.color || 0
@@ -107,12 +107,14 @@ module Azurterm
         while buf = Readline.readline("#{APP_NAME}> ", true)
           begin
             cmd, *pipes = buf.to_s.split(/\|/).map!{|m|m.strip}
-            cmd, *args = cmd.to_s.split(/\s/).map!{|m|m.strip}
+            cmd, *args = cmd.to_s.split(/\s/).inject([]){|r,c|c.empty?? r: r<<c}
             next if cmd.nil?
             res = Commands.respond_to?(cmd)? 
               Commands.__send__(cmd, args): "Command #{cmd} not defined."
-              system("echo \"#{res}\" "+
-                     (pipes.to_s.empty? ? '': '|'+pipes.join('|'))) unless res.to_s.empty?
+            resf = File.join(CACHE_DIR, '.cache')
+            File.open(resf, 'w'){|f| f.puts res }
+            system("cat #{resf} "+
+                   (pipes.to_s.empty?? '': '|'+pipes.join('|'))) unless res.to_s.empty?
           rescue Exception => e
             puts "Command #{cmd} failure."
             puts "#{e.class} #{e.message}"

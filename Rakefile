@@ -14,6 +14,7 @@ begin
 		gemspec.has_rdoc = true
 		gemspec.rdoc_options = ["--main", "README.rdoc", "--exclude", "spec"]
 	  gemspec.files = FileList['lib/**/*.rb', 'VERSION', 'Rakefile']
+    gemspec.add_dependency 'zipruby'
 	end
 rescue LoadError
 	puts "Jeweler not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"
