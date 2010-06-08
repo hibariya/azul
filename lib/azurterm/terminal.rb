@@ -29,13 +29,13 @@ module Azurterm
           reload
         end
 
-        def reload(args)
+        def reload(args=nil)
           Terminal.change_editing_mode Azurterm.config.editing_mode || 'emacs'
           Terminal.change_color Azurterm.config.color || 0
           nil
         end
         
-        def updatedb(args)
+        def updatedb(args=nil)
           Shelf.open.reload
           nil end
 
