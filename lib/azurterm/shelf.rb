@@ -57,9 +57,9 @@ module Azurterm
 
     def push_raw(raw)
       person = @persons.find{|p|p.id==raw.person_id }||
-        (@persons<<Person.new(:id=>raw.person_id,:name=>raw.person_name)).last
+        (@persons<<Person.new(:id=>raw.person_id,:name=>raw.person_name,:rownum=>@persons.length)).last
       work = @works.find{|p|p.id==raw.work_id }||
-        (@works<<Work.new(:id=>raw.work_id,:title=>raw.work_title,:person=>person)).last
+        (@works<<Work.new(:id=>raw.work_id,:title=>raw.work_title,:person=>person,:rownum=>@works.length)).last
       work.person ||= person
       person.works<<work
       self

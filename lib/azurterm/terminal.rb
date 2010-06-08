@@ -6,24 +6,37 @@ module Azurterm
         def search(args)
           args = ['all', args.first] if args.length<2
           mode, word = args
-          Terminal.shelf.search mode.intern=>word
-          Terminal.shelf.persons.map{|p|"[#{atoz(p.id.to_i)}] #{p.name}"}.join "\n"
+          mode = case mode
+                 when 'author' then :person
+                 when 'title' then :work
+                 else mode.intern
+                 end
+          Terminal.shelf.search mode=>word
+          persons = Terminal.shelf.persons
+          case persons.length
+          when 0 then nil
+          when 1 then take atoz persons.first.rownum
+          else persons.map{|p|"[#{atoz(p.rownum)}] #{p.name}"}.join "\n"
+          end
         end
 
         def take(args)
-          Terminal.shelf.persons = [shelf.persons.find{|p|atoz(p.id.to_i)==args.first}]
+          Terminal.shelf.persons = [shelf.persons.find{|p|atoz(p.rownum)==args.first}]
           list
         end
+       alias :select :take
 
         def list(args=nil)
           Terminal.shelf.persons.first.works.
-            map{|w|"[#{atoz(w.id.to_i)}] #{w.title}"}.join "\n"
+            map{|w|"[#{atoz(w.rownum)}] #{w.title}"}.join "\n"
         end
+        alias :ls :list
 
         def open(args)
-          work = Terminal.shelf.works.find{|w|atoz(w.id.to_i)==args.first}
+          work = Terminal.shelf.works.find{|w|atoz(w.rownum)==args.first}
           shelf.fetch work
         end
+        alias :view :open
 
         def set(args)
           Terminal.config.start do
@@ -41,6 +54,12 @@ module Azurterm
         def updatedb(args=nil)
           Terminal.shelf.reload
           nil end
+
+        # sub commands {{{
+        def person(args=nil); 'usage: search person [person word]' end
+        def all(args=nil); 'usage: search all [search word]' end
+        def work(args=nil); 'usage: search works [title word]' end
+        # }}}
 
         private
         def atoz(num)
@@ -91,11 +110,11 @@ module Azurterm
             cmd, *args = cmd.to_s.split(/\s/).map!{|m|m.strip}
             next if cmd.nil?
             res = Commands.respond_to?(cmd)? 
-              Commands.__send__(cmd, args): "Commands #{cmd} Not Defined."
+              Commands.__send__(cmd, args): "Command #{cmd} not defined."
               system("echo \"#{res}\" "+
                      (pipes.to_s.empty? ? '': '|'+pipes.join('|'))) unless res.to_s.empty?
           rescue Exception => e
-            puts "Commands #{cmd} Failure."
+            puts "Command #{cmd} failure."
             puts "#{e.class} #{e.message}"
             puts $@
           end
