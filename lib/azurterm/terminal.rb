@@ -1,42 +1,45 @@
 module Azurterm
   class Terminal
-    class Command
+
+    class Commands
       class << self
         def search(args)
           args = ['all', args.first] if args.length<2
           mode, word = args
-          shelf = Shelf.open
-          shelf.search mode.intern=>word
-          shelf.persons.map{|p|"[#{atoz(p.id.to_i)}] #{p.name}"}.join "\n"
+          Terminal.shelf.search mode.intern=>word
+          Terminal.shelf.persons.map{|p|"[#{atoz(p.id.to_i)}] #{p.name}"}.join "\n"
         end
 
         def take(args)
-          shelf = Shelf.open
-          person = shelf.persons.find{|p|atoz(p.id.to_i)==args.first}
-          person.works.map{|w|"[#{atoz(w.id.to_i)}] #{w.title}"}.join "\n"
+          Terminal.shelf.persons = [shelf.persons.find{|p|atoz(p.id.to_i)==args.first}]
+          list
+        end
+
+        def list(args=nil)
+          Terminal.shelf.persons.first.works.
+            map{|w|"[#{atoz(w.id.to_i)}] #{w.title}"}.join "\n"
         end
 
         def open(args)
-          shelf = Shelf.open
-          work = shelf.works.find{|w|atoz(w.id.to_i)==args.first}
+          work = Terminal.shelf.works.find{|w|atoz(w.id.to_i)==args.first}
           shelf.fetch work
         end
 
         def set(args)
-          Azurterm::Config.start do
+          Terminal.config.start do
             __send__(args.first, args.last)
           end
           reload
         end
 
         def reload(args=nil)
-          Terminal.change_editing_mode Azurterm.config.editing_mode || 'emacs'
-          Terminal.change_color Azurterm.config.color || 0
+          Terminal.change_editing_mode Terminal.config.editing_mode || 'emacs'
+          Terminal.change_color Terminal.config.color || 0
           nil
         end
-        
+
         def updatedb(args=nil)
-          Shelf.open.reload
+          Terminal.shelf.reload
           nil end
 
         private
@@ -55,33 +58,50 @@ module Azurterm
         Readline.__send__("#{e}_editing_mode")
       end
 
+      def config_default
+        config = Config.new
+        config.start do
+          base_uri 'http://www.aozora.gr.jp/'
+          database_path 'index_pages/list_person_all.zip'
+          person_path 'cards/%s/'
+          card_file 'card%s.html'
+          database_expire 86400
+          color 34
+        end
+      end
+
       def ready
+        config, shelf = config_default, Shelf.new.load
         load CONF_FILE if File.exist? CONF_FILE
-        Shelf.open.load
-        change_editing_mode Azurterm.config.editing_mode || 'emacs'
-        change_color Azurterm.config.color || 0
+        shelf.config = config
+        self.class.__send__(:define_method, :config){ config }
+        self.class.__send__(:define_method, :shelf){ shelf }
+
+        change_editing_mode config.editing_mode || 'emacs'
+        change_color config.color || 0
         Readline.completion_proc = lambda do |word|
-          (Command.methods-methods).
+          (Commands.methods-methods).
             grep(/\A#{Regexp.quote word}/)
         end
-        puts "[#{APP_NAME} Version #{VERSION}]"
 
+        puts "[#{APP_NAME} Version #{VERSION}]"
         while buf = Readline.readline("#{APP_NAME}> ", true)
           begin
-            command, *pipes = buf.to_s.split(/\|/).map!{|m|m.strip}
-            command, *args = command.to_s.split(/\s/).map!{|m|m.strip}
-            next if command.nil?
-            res = Command.respond_to?(command)? 
-              Command.__send__(command, args): "Command #{command} Not Defined."
+            cmd, *pipes = buf.to_s.split(/\|/).map!{|m|m.strip}
+            cmd, *args = cmd.to_s.split(/\s/).map!{|m|m.strip}
+            next if cmd.nil?
+            res = Commands.respond_to?(cmd)? 
+              Commands.__send__(cmd, args): "Commands #{cmd} Not Defined."
               system("echo \"#{res}\" "+
                      (pipes.to_s.empty? ? '': '|'+pipes.join('|'))) unless res.to_s.empty?
           rescue Exception => e
-            puts "Command #{command} Failure."
+            puts "Commands #{cmd} Failure."
             puts "#{e.class} #{e.message}"
             puts $@
           end
         end
       end
+
     end
 
   end

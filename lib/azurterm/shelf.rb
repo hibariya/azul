@@ -1,19 +1,19 @@
 module Azurterm
   class Shelf
     __here = File.dirname __FILE__
-    require File.join __here, 'shelf/raw_work.rb'
-    require File.join __here, 'shelf/work.rb'
-    require File.join __here, 'shelf/person.rb'
+    require File.join __here, 'shelf/raw_work'
+    require File.join __here, 'shelf/work'
+    require File.join __here, 'shelf/person'
 
     DATABASE_FILE = File.join(CACHE_DIR, 'database')
-    attr_reader :database, :works, :persons
+    attr_reader :database, :works
+    attr_accessor :config, :persons
 
     def initialize
-      @database, @works, @persons = '', [], []
+      @database, @works, @persons, @config = '', [], [], {}
     end
 
     def fetch(work)
-      config = Azurterm.config
       base = sprintf(config.base_uri+config.person_path, work.person.id)
       source_uri = URI.join(base, sprintf(config.card_file, work.id.to_i)).
         open{|f|f.read}.scan(/<a href=["']?([^'">]+\.zip)['">]/).flatten.first
@@ -74,7 +74,6 @@ module Azurterm
 
     private
     def create_database
-      config = Azurterm.config
       Zip::Archive.open_buffer(URI.parse(config.base_uri+config.database_path).read) do |zip|
         zip.fopen(zip.get_name(0)) do |csv|
           data = csv.read.toutf8
@@ -89,10 +88,6 @@ module Azurterm
     def read_database
       File.open(DATABASE_FILE){|f| f.read }
     end
-
-    __instance = self.new
-    (class << self; self end).
-      __send__(:define_method, :open) { __instance }
 
   end
 end
