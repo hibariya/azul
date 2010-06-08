@@ -1,4 +1,4 @@
-module Aozora
+module Azurterm
   class Terminal
     class Command
       class << self
@@ -23,7 +23,7 @@ module Aozora
         end
 
         def set(args)
-          Aozora::Config.start do
+          Azurterm::Config.start do
             __send__(args.first, args.last)
           end
           nil
@@ -47,7 +47,7 @@ module Aozora
     def self.prepare
       load CONF_FILE if File.exist? CONF_FILE
       Shelf.open.load
-      Readline.__send__("#{Aozora.config.editing_mode}_editing_mode") if Aozora.config.editing_mode
+      Readline.__send__("#{Azurterm.config.editing_mode}_editing_mode") if Azurterm.config.editing_mode
       Readline.completion_proc = lambda do |word|
         (Command.methods-methods).
           grep(/\A#{Regexp.quote word}/)

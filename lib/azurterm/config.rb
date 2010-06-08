@@ -1,4 +1,4 @@
-module Aozora
+module Azurterm
   class Config
     def initialize
       @store = {} end
@@ -22,8 +22,7 @@ module Aozora
 
   # set config defaults
   Config.start do
-    #base_uri 'http://www.aozora.gr.jp/'
-    base_uri 'http://www.google.co.jp/'
+    base_uri 'http://www.aozora.gr.jp/'
     database_path 'index_pages/list_person_all.zip'
     person_path 'cards/%s/'
     card_file 'card%s.html'

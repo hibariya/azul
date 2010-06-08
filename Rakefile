@@ -4,12 +4,12 @@ require 'rake'
 begin
   require 'jeweler'
 	Jeweler::Tasks.new do |gemspec|
-		gemspec.name = "aozora"
+		gemspec.name = "azurterm"
 		gemspec.summary = "aozora bunko cui viewer"
 		gemspec.email = "celluloid.key@gmail.com"
-		gemspec.homepage = "http://github.com/hibariya/aozora"
+		gemspec.homepage = "http://github.com/hibariya/azurterm"
 		gemspec.description = "aozora bunko cui viewer"
-    gemspec.executables = ["aozora"]
+    gemspec.executables = ["azurterm"]
 		gemspec.authors = %w(hibariya)
 		gemspec.has_rdoc = true
 		gemspec.rdoc_options = ["--main", "README.rdoc", "--exclude", "spec"]

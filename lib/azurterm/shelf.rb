@@ -1,4 +1,4 @@
-module Aozora
+module Azurterm
   class Shelf
     __here = File.dirname __FILE__
     require File.join __here, 'shelf/raw_work.rb'
@@ -13,7 +13,7 @@ module Aozora
     end
 
     def fetch(work)
-      config = Aozora.config
+      config = Azurterm.config
       base = sprintf(config.base_uri+config.person_path, work.person.id)
       source_uri = URI.join(base, sprintf(config.card_file, work.id.to_i)).
         open{|f|f.read}.scan(/<a href=["']?([^'">]+\.zip)['">]/).flatten.first
@@ -74,7 +74,7 @@ module Aozora
 
     private
     def create_database
-      config = Aozora.config
+      config = Azurterm.config
       Zip::Archive.open_buffer(URI.parse(config.base_uri+config.database_path).read) do |zip|
         zip.fopen(zip.get_name(0)) do |csv|
           data = csv.read.toutf8

@@ -14,16 +14,16 @@ require 'pty'
 require 'expect'
 require 'cgi'
 
-module Aozora
-  APP_NAME = 'aozora'
+module Azurterm
+  APP_NAME = 'azurterm'
   VERSION = File.read(File.join(File.dirname(__FILE__), '../VERSION')).strip
-  CACHE_DIR = File.expand_path('~/.aozora')
+  CACHE_DIR = File.expand_path('~/.azurterm')
   CONF_FILE = File.join(CACHE_DIR, 'config')
   
   __here = File.dirname __FILE__
-  require File.join __here, 'aozora/config'
-  require File.join __here, 'aozora/shelf'
-  require File.join __here, 'aozora/terminal'
+  require File.join __here, 'azurterm/config'
+  require File.join __here, 'azurterm/shelf'
+  require File.join __here, 'azurterm/terminal'
 end
 
 

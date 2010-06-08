@@ -1,4 +1,4 @@
-module Aozora
+module Azurterm
   class Shelf
     class RawWork
       COLUMNS = [:person_id, :person_name, :work_id, :work_title,

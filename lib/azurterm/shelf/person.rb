@@ -1,4 +1,4 @@
-module Aozora
+module Azurterm
   class Shelf
     class Person
       attr_accessor :id, :name, :works
