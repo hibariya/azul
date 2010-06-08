@@ -26,12 +26,14 @@ module Azurterm
           Azurterm::Config.start do
             __send__(args.first, args.last)
           end
-          nil
+          reload
         end
 
         def reload(args)
-          Terminal.prepare
-          nil end
+          Terminal.change_editing_mode Azurterm.config.editing_mode || 'emacs'
+          Terminal.change_color Azurterm.config.color || 0
+          nil
+        end
         
         def updatedb(args)
           Shelf.open.reload
@@ -44,31 +46,43 @@ module Azurterm
       end
     end
 
-    def self.prepare
-      load CONF_FILE if File.exist? CONF_FILE
-      Shelf.open.load
-      Readline.__send__("#{Azurterm.config.editing_mode}_editing_mode") if Azurterm.config.editing_mode
-      Readline.completion_proc = lambda do |word|
-        (Command.methods-methods).
-          grep(/\A#{Regexp.quote word}/)
+    class << self
+      def change_color(c)
+        print "\e[0m\e[#{c}m"
       end
-    end
 
-    def self.ready
-      prepare
-      while buf = Readline.readline('> ', true)
-        begin
-        command, *pipes = buf.split(/\|/).map!{|m|m.strip}
-        command, *args = command.split(/\s/).map!{|m|m.strip}
-        res = Command.respond_to?(command)? 
-          Command.__send__(command, args): "Command #{command} Not Defined."
-          system("echo \"#{res}\" "+
-                 (pipes.to_s.empty? ? '': '|'+pipes.join('|'))) unless res.to_s.empty?
-        rescue Exception => e
-          puts "#{e.class} #{e.message}"
+      def change_editing_mode(e)
+        Readline.__send__("#{e}_editing_mode")
+      end
+
+      def ready
+        load CONF_FILE if File.exist? CONF_FILE
+        Shelf.open.load
+        change_editing_mode Azurterm.config.editing_mode || 'emacs'
+        change_color Azurterm.config.color || 0
+        Readline.completion_proc = lambda do |word|
+          (Command.methods-methods).
+            grep(/\A#{Regexp.quote word}/)
+        end
+        puts "[#{APP_NAME} Version #{VERSION}]"
+
+        while buf = Readline.readline("#{APP_NAME}> ", true)
+          begin
+            command, *pipes = buf.to_s.split(/\|/).map!{|m|m.strip}
+            command, *args = command.to_s.split(/\s/).map!{|m|m.strip}
+            next if command.nil?
+            res = Command.respond_to?(command)? 
+              Command.__send__(command, args): "Command #{command} Not Defined."
+              system("echo \"#{res}\" "+
+                     (pipes.to_s.empty? ? '': '|'+pipes.join('|'))) unless res.to_s.empty?
+          rescue Exception => e
+            puts "Command #{command} Failure."
+            puts "#{e.class} #{e.message}"
+            puts $@
+          end
         end
       end
-
     end
+
   end
 end

@@ -70,7 +70,7 @@ module Azurterm
       @database = read_database
       self
     end
-    def reload create_database; self.load end
+    def reload; create_database; self.load end
 
     private
     def create_database

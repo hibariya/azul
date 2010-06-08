@@ -27,6 +27,7 @@ module Azurterm
     person_path 'cards/%s/'
     card_file 'card%s.html'
     database_expire 86400
+    color 34
   end
   def self.config; Config.instance end
 end

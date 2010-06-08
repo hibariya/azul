@@ -15,7 +15,7 @@ require 'expect'
 require 'cgi'
 
 module Azurterm
-  APP_NAME = 'azurterm'
+  APP_NAME = 'Azurterm'
   VERSION = File.read(File.join(File.dirname(__FILE__), '../VERSION')).strip
   CACHE_DIR = File.expand_path('~/.azurterm')
   CONF_FILE = File.join(CACHE_DIR, 'config')
