@@ -11,6 +11,9 @@ module Azul
     def initialize
       @database, @works, @persons, @config = '', [], [], Config.new
     end
+    
+    def self.open
+      self.new.load end
 
     def fetch(work)
       source_uri = URI.parse(sprintf(config.card_uri, work.person.id, work.id.to_i)).
