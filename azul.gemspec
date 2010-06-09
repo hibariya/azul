@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{azul}
-  s.version = "0.1.1"
+  s.version = "0.2.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["hibariya"]
-  s.date = %q{2010-06-09}
+  s.date = %q{2010-06-10}
   s.default_executable = %q{azul}
   s.description = %q{aozora bunko cui viewer}
   s.email = %q{celluloid.key@gmail.com}
