@@ -5,19 +5,17 @@ module Azure
     require File.join __here, 'shelf/work'
     require File.join __here, 'shelf/person'
 
-    DATABASE_FILE = File.join(CACHE_DIR, 'database')
     attr_reader :database, :works
     attr_accessor :config, :persons
 
     def initialize
-      @database, @works, @persons, @config = '', [], [], {}
+      @database, @works, @persons, @config = '', [], [], Config.new
     end
 
     def fetch(work)
-      base = sprintf(config.base_uri+config.person_path, work.person.id)
-      source_uri = URI.join(base, sprintf(config.card_file, work.id.to_i)).
+      source_uri = URI.parse(sprintf(config.card_uri, work.person.id, work.id.to_i)).
         open{|f|f.read}.scan(/<a href=["']?([^'">]+\.zip)['">]/).flatten.first
-      URI.join(base, source_uri).open do |source|
+      URI.join(sprintf(config.person_uri, work.person.id), source_uri).open do |source|
         Zip::Archive.open_buffer(source.read) do |archive|
           archive.fopen(archive.get_name(0)){|file|file.read.toutf8}
         end
@@ -66,7 +64,7 @@ module Azure
     end
 
     def load
-      create_database unless File.exist?(DATABASE_FILE)
+      create_database unless File.exist?(config.database)
       @database = read_database
       self
     end
@@ -74,11 +72,11 @@ module Azure
 
     private
     def create_database
-      Zip::Archive.open_buffer(URI.parse(config.base_uri+config.database_path).read) do |zip|
+      Zip::Archive.open_buffer(URI.parse(config.database_uri).read) do |zip|
         zip.fopen(zip.get_name(0)) do |csv|
           data = csv.read.toutf8
-          Dir.mkdir(CACHE_DIR) unless File.directory?(CACHE_DIR)
-          File.open(DATABASE_FILE, 'w') do |f|
+          Dir.mkdir(config.cache_dir) unless File.directory?(config.cache_dir)
+          File.open(config.database, 'w') do |f|
             f.write data
           end
         end
@@ -86,7 +84,7 @@ module Azure
     end
 
     def read_database
-      File.open(DATABASE_FILE){|f| f.read }
+      File.open(config.database){|f| f.read }
     end
 
   end

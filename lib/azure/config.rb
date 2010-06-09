@@ -1,7 +1,14 @@
 module Azure
   class Config
     def initialize
-      @store = {} end
+      @store = {
+        :cache_dir => LOCAL_FILES_DIR,
+        :database => File.join(LOCAL_FILES_DIR, 'database'),
+        :database_uri => 'http://www.aozora.gr.jp/index_pages/list_person_all.zip',
+        :person_uri => 'http://www.aozora.gr.jp/cards/%s/',
+        :card_uri => 'http://www.aozora.gr.jp/cards/%s/card%s.html'
+      }
+    end
 
     def start(&b)
       self.instance_eval &b

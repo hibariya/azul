@@ -17,9 +17,8 @@ require 'cgi'
 module Azure
   APP_NAME = 'Azure'
   VERSION = File.read(File.join(File.dirname(__FILE__), '../VERSION')).strip
-  CACHE_DIR = File.expand_path('~/.azure')
-  CONF_FILE = File.join(CACHE_DIR, 'config')
-  
+  LOCAL_FILES_DIR = File.expand_path('~/.azure')
+
   __here = File.dirname __FILE__
   require File.join __here, 'azure', 'config'
   require File.join __here, 'azure', 'shelf'

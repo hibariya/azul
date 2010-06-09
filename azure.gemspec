@@ -29,7 +29,7 @@ Gem::Specification.new do |s|
      "lib/azure/terminal.rb"
   ]
   s.homepage = %q{http://github.com/hibariya/azure}
-  s.rdoc_options = ["--main", "README.rdoc", "--exclude", "spec"]
+  s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.3.6}
   s.summary = %q{aozora bunko cui viewer}

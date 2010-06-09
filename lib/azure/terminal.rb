@@ -1,5 +1,6 @@
 module Azure
   class Terminal
+    CONF_FILE = File.expand_path('~/.azure/config')
 
     class Commands
       class << self
@@ -80,11 +81,7 @@ module Azure
       def config_default
         config = Config.new
         config.start do
-          base_uri 'http://www.aozora.gr.jp/'
-          database_path 'index_pages/list_person_all.zip'
-          person_path 'cards/%s/'
-          card_file 'card%s.html'
-          database_expire 86400
+          base_uri 'http://mirror.aozora.gr.jp/'
           color 34
         end
       end
@@ -112,7 +109,7 @@ module Azure
             next if cmd.nil?
             res = Commands.respond_to?(cmd)? 
               Commands.__send__(cmd, args): "Command #{cmd} not defined."
-            resf = File.join(CACHE_DIR, '.cache')
+            resf = File.join(config.cache_dir, '.cache')
             File.open(resf, 'w'){|f| f.puts res }
             system("cat #{resf} "+
                    (pipes.to_s.empty?? '': '|'+pipes.join('|'))) unless res.to_s.empty?

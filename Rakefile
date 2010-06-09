@@ -11,8 +11,8 @@ begin
 		gemspec.description = "aozora bunko cui viewer"
     gemspec.executables = ["azure"]
 		gemspec.authors = %w(hibariya)
-		gemspec.has_rdoc = true
-		gemspec.rdoc_options = ["--main", "README.rdoc", "--exclude", "spec"]
+		#gemspec.has_rdoc = true
+		#gemspec.rdoc_options = ["--main", "README.rdoc", "--exclude", "spec"]
 	  gemspec.files = FileList['lib/**/*.rb', 'VERSION', 'Rakefile']
     gemspec.add_dependency 'zipruby'
 	end
