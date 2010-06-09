@@ -4,37 +4,37 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{azurterm}
+  s.name = %q{azure}
   s.version = "0.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["hibariya"]
   s.date = %q{2010-06-09}
-  s.default_executable = %q{azurterm}
+  s.default_executable = %q{azure}
   s.description = %q{aozora bunko cui viewer}
   s.email = %q{celluloid.key@gmail.com}
-  s.executables = ["azurterm"]
+  s.executables = ["azure"]
   s.extra_rdoc_files = [
     "README"
   ]
   s.files = [
     "Rakefile",
      "VERSION",
-     "lib/azurterm.rb",
-     "lib/azurterm/config.rb",
-     "lib/azurterm/shelf.rb",
-     "lib/azurterm/shelf/person.rb",
-     "lib/azurterm/shelf/raw_work.rb",
-     "lib/azurterm/shelf/work.rb",
-     "lib/azurterm/terminal.rb"
+     "lib/azure.rb",
+     "lib/azure/config.rb",
+     "lib/azure/shelf.rb",
+     "lib/azure/shelf/person.rb",
+     "lib/azure/shelf/raw_work.rb",
+     "lib/azure/shelf/work.rb",
+     "lib/azure/terminal.rb"
   ]
-  s.homepage = %q{http://github.com/hibariya/azurterm}
+  s.homepage = %q{http://github.com/hibariya/azure}
   s.rdoc_options = ["--main", "README.rdoc", "--exclude", "spec"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.3.6}
   s.summary = %q{aozora bunko cui viewer}
   s.test_files = [
-    "spec/azurterm_spec.rb",
+    "spec/azure_spec.rb",
      "spec/spec_helper.rb"
   ]
 
