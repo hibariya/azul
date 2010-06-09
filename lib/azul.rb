@@ -8,11 +8,10 @@ STDOUT.sync = true
 require 'rubygems'
 require 'open-uri'
 require 'zipruby'
-require 'kconv'
+require 'iconv'
 require 'readline'
 require 'pty'
 require 'expect'
-require 'cgi'
 
 module Azul
   APP_NAME = 'Azul'

@@ -1,6 +1,6 @@
 module Azul
   class Terminal
-    CONF_FILE = File.expand_path('~/.azul/config')
+    CONF_FILE = File.join(LOCAL_FILES_DIR, 'config')
 
     class Commands
       class << self
@@ -12,7 +12,7 @@ module Azul
                  when 'title' then :work
                  else mode.intern
                  end
-          Terminal.shelf.search mode=>word
+          Terminal.shelf.search mode=>word.to_s
           persons = Terminal.shelf.persons
           case persons.length
           when 0 then nil
@@ -22,12 +22,14 @@ module Azul
         end
 
         def take(args)
+          return nil if Terminal.shelf.persons.empty?
           Terminal.shelf.persons = [shelf.persons.find{|p|atoz(p.rownum)==args.first}]
           list
         end
        alias :select :take
 
         def list(args=nil)
+          return nil if Terminal.shelf.persons.empty?
           Terminal.shelf.persons.first.works.
             map{|w|"[#{atoz(w.rownum)}] #{w.title}"}.join "\n"
         end
@@ -35,7 +37,7 @@ module Azul
 
         def open(args)
           work = Terminal.shelf.works.find{|w|atoz(w.rownum)==args.first}
-          shelf.fetch work
+          work ? shelf.fetch(work): nil
         end
         alias :view :open
 
@@ -47,6 +49,7 @@ module Azul
         end
 
         def reload(args=nil)
+          puts Terminal.config.attributes.inspect
           Terminal.change_editing_mode Terminal.config.editing_mode || 'emacs'
           Terminal.change_color Terminal.config.color || 0
           nil
@@ -107,15 +110,18 @@ module Azul
             cmd, *pipes = buf.to_s.split(/\|/).map!{|m|m.strip}
             cmd, *args = cmd.to_s.split(/\s/).inject([]){|r,c|c.empty?? r: r<<c}
             next if cmd.nil?
-            res = Commands.respond_to?(cmd)? 
-              Commands.__send__(cmd, args): "Command #{cmd} not defined."
-            resf = File.join(config.cache_dir, '.cache')
-            File.open(resf, 'w'){|f| f.puts res }
-            system("cat #{resf} "+
+            res = Commands.__send__(cmd, args) 
+            resfile = File.join(config.cache_dir, '.cache')
+            File.open(resfile, 'w'){|f| f.puts res }
+            system("cat #{resfile} "+
                    (pipes.to_s.empty?? '': '|'+pipes.join('|'))) unless res.to_s.empty?
+          rescue NoMethodError => e
+            puts "Command #{cmd} not defined."
+          rescue OpenURI::HTTPError => e
+            puts "HTTP Error."
           rescue Exception => e
             puts "Command #{cmd} failure."
-            puts "#{e.class} #{e.message}"
+            puts "raised: #{e.class} #{e.message}"
             puts $@
           end
         end

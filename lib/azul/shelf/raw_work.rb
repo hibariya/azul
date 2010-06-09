@@ -9,7 +9,7 @@ module Azul
       attr_reader :record
       
       def initialize(record)
-        @record = record.split(',')
+        @record = record.split(/[\s"]?,[\s"]?/)
         COLUMNS.each_with_index do |column, i|
           __send__ column.to_s+'=', @record[i]
         end

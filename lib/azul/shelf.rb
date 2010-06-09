@@ -15,12 +15,15 @@ module Azul
     def self.open
       self.new.load end
 
+    def aozora_to_utf8(str='')
+      Iconv.conv('UTF-8', 'SHIFT_JIS', str) end
+
     def fetch(work)
       source_uri = URI.parse(sprintf(config.card_uri, work.person.id, work.id.to_i)).
         open{|f|f.read}.scan(/<a href=["']?([^'">]+\.zip)['">]/).flatten.first
       URI.join(sprintf(config.person_uri, work.person.id), source_uri).open do |source|
         Zip::Archive.open_buffer(source.read) do |archive|
-          archive.fopen(archive.get_name(0)){|file|file.read.toutf8}
+          archive.fopen(archive.get_name(0)){|f| aozora_to_utf8 f.read }
         end
       end
     end
@@ -34,8 +37,8 @@ module Azul
       mode, word = args.inject([]){|r,c|c.last.empty?? r: c}
       @persons = []
       @works = []
-      __send__('search_'+mode.to_s, 
-               word, grep(word).map{|r| RawWork.new r })
+      __send__('search_'+mode.to_s, word, 
+               grep(word).map{|r| RawWork.new r })
       @persons
     end
 
@@ -77,7 +80,7 @@ module Azul
     def create_database
       Zip::Archive.open_buffer(URI.parse(config.database_uri).read) do |zip|
         zip.fopen(zip.get_name(0)) do |csv|
-          data = csv.read.toutf8
+          data =  aozora_to_utf8 csv.read
           Dir.mkdir(config.cache_dir) unless File.directory?(config.cache_dir)
           File.open(config.database, 'w') do |f|
             f.write data
