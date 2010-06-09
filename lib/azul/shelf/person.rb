@@ -1,4 +1,4 @@
-module Azure
+module Azul
   class Shelf
     class Person
       attr_accessor :id, :name, :works

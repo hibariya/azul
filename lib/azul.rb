@@ -14,15 +14,15 @@ require 'pty'
 require 'expect'
 require 'cgi'
 
-module Azure
-  APP_NAME = 'Azure'
+module Azul
+  APP_NAME = 'Azul'
   VERSION = File.read(File.join(File.dirname(__FILE__), '../VERSION')).strip
-  LOCAL_FILES_DIR = File.expand_path('~/.azure')
+  LOCAL_FILES_DIR = File.expand_path('~/.azul')
 
   __here = File.dirname __FILE__
-  require File.join __here, 'azure', 'config'
-  require File.join __here, 'azure', 'shelf'
-  require File.join __here, 'azure', 'terminal'
+  require File.join __here, 'azul', 'config'
+  require File.join __here, 'azul', 'shelf'
+  require File.join __here, 'azul', 'terminal'
 end
 
 

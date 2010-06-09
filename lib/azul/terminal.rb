@@ -1,6 +1,6 @@
-module Azure
+module Azul
   class Terminal
-    CONF_FILE = File.expand_path('~/.azure/config')
+    CONF_FILE = File.expand_path('~/.azul/config')
 
     class Commands
       class << self

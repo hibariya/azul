@@ -1,4 +1,4 @@
-module Azure
+module Azul
   class Config
     def initialize
       @store = {

@@ -1,6 +1,6 @@
 require File.dirname(__FILE__) + '/spec_helper'
 
-describe Azure do
+describe Azul do
 	it 'test' do
 	end
 end

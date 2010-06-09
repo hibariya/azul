@@ -1,4 +1,4 @@
-module Azure
+module Azul
   class Shelf
     __here = File.dirname __FILE__
     require File.join __here, 'shelf/raw_work'

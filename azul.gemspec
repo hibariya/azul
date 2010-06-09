@@ -4,37 +4,37 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{azure}
+  s.name = %q{azul}
   s.version = "0.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["hibariya"]
   s.date = %q{2010-06-09}
-  s.default_executable = %q{azure}
+  s.default_executable = %q{azul}
   s.description = %q{aozora bunko cui viewer}
   s.email = %q{celluloid.key@gmail.com}
-  s.executables = ["azure"]
+  s.executables = ["azul"]
   s.extra_rdoc_files = [
     "README"
   ]
   s.files = [
     "Rakefile",
      "VERSION",
-     "lib/azure.rb",
-     "lib/azure/config.rb",
-     "lib/azure/shelf.rb",
-     "lib/azure/shelf/person.rb",
-     "lib/azure/shelf/raw_work.rb",
-     "lib/azure/shelf/work.rb",
-     "lib/azure/terminal.rb"
+     "lib/azul.rb",
+     "lib/azul/config.rb",
+     "lib/azul/shelf.rb",
+     "lib/azul/shelf/person.rb",
+     "lib/azul/shelf/raw_work.rb",
+     "lib/azul/shelf/work.rb",
+     "lib/azul/terminal.rb"
   ]
-  s.homepage = %q{http://github.com/hibariya/azure}
+  s.homepage = %q{http://github.com/hibariya/azul}
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.3.6}
   s.summary = %q{aozora bunko cui viewer}
   s.test_files = [
-    "spec/azure_spec.rb",
+    "spec/azul_spec.rb",
      "spec/spec_helper.rb"
   ]
 
