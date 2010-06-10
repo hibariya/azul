@@ -19,9 +19,9 @@ module Azul
       Iconv.conv('UTF-8', 'SHIFT_JIS', str) end
 
     def fetch(work)
-      source_uri = URI.parse(sprintf(config.card_uri, work.person.id, work.id.to_i)).
-        open{|f|f.read}.scan(/<a href=["']?([^'">]+\.zip)['">]/).flatten.first
-      URI.join(sprintf(config.person_uri, work.person.id), source_uri).open do |source|
+      source_uri = URI.parse(sprintf(config.card_uri, work.person.id, work.id.gsub(/^0*/, ''))).
+        open{|f|f.read}.scan(/<a href=["']?([^'">]+\.zip)['">]/i).flatten.first
+      URI.parse(sprintf(config.person_uri, work.person.id)+source_uri).open do |source|
         Zip::Archive.open_buffer(source.read) do |archive|
           archive.fopen(archive.get_name(0)){|f| aozora_to_utf8 f.read }
         end
