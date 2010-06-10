@@ -14,3 +14,12 @@ Azul: 青空文庫のターミナルビューア
   set KEY VALUE                       設定値を変更して画面に反映
   reload                              現在の設定値を画面に反映
   updatedb                            タイトル,著者のリストを青空文庫から取得しなおす
+
+設定ファイル
+  デフォルトの動きを変更できます
+  % cat ~/.azul/config
+  Azul::Terminal.config.start do 
+    color 34        # 表示色を変更
+    editing_mode vi # キーバインドをviライクに変更
+  end
+
