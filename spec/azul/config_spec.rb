@@ -2,6 +2,17 @@ require File.dirname(__FILE__) + '/../spec_helper'
 
 describe Azul::Config do
   before do
+    @config = Azul::Config.new
+  end
+
+  it "instance should have some default values" do
+    [@config.cache_dir,
+      @config.database,
+      @config.database_uri,
+      @config.person_uri,
+      @config.card_uri,
+      @config.color,
+      @config.editing_mode].should be_all
   end
 
 end
