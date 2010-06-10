@@ -15,4 +15,15 @@ describe Azul::Config do
       @config.editing_mode].should be_all
   end
 
+  it "attributes should alterable" do
+    emode = 'emacs'
+    col = 44
+    @config.start do
+      color col
+      editing_mode emode
+    end
+    @config.editing_mode.should eql emode
+    @config.color.should eql col
+  end
+
 end

@@ -12,11 +12,19 @@ module Azul
       }
     end
 
+    #
+    # ブロックで設定値を変更などする
+    #  設定名 設定値
+    # のように淡々と記述していく
+    #
     def start(&b)
       self.instance_eval &b
       self
     end
 
+    #
+    # すべて@storeに対するアクセスとして処理
+    #
     def method_missing(name, *args)
       return @store[name] if args.empty?
       @store[name] = args.first

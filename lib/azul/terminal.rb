@@ -7,13 +7,14 @@ module Azul
 
     class << self
       def change_color(c)
-        print "\e[0m\e[#{c}m"
-      end
+        print "\e[0m\e[#{c}m" end
 
       def change_editing_mode(e)
-        Readline.__send__("#{e}_editing_mode")
-      end
+        Readline.__send__("#{e}_editing_mode") end
 
+      #
+      # プロンプトを開始
+      #
       def ready
         config, shelf = Config.new, Shelf.new
         shelf.config = config

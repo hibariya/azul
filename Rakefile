@@ -11,8 +11,8 @@ begin
 		gemspec.description = "aozora bunko cui viewer"
     gemspec.executables = ["azul"]
 		gemspec.authors = %w(hibariya)
-		#gemspec.has_rdoc = true
-		#gemspec.rdoc_options = ["--main", "README.rdoc", "--exclude", "spec"]
+		gemspec.has_rdoc = true
+		gemspec.rdoc_options = ["--main", "README.rdoc", "--exclude", "spec", "--inline-source", "--charset=UTF-8"]
 	  gemspec.files = FileList['lib/**/*.rb', 'VERSION', 'Rakefile']
     gemspec.add_dependency 'zipruby'
 	end
@@ -26,4 +26,16 @@ Spec::Rake::SpecTask.new(:spec) do |spec|
 	spec.spec_files = FileList['spec/**/*_spec.rb']
 end
 task :default => :spec
+
+#require 'rake/rdoctask'
+#Rake::RDocTask.new(:rdoc) do |rdoc|
+#  rdoc.title    = "Azul"
+#  rdoc.rdoc_files.include 'README.rdoc'
+#	rdoc.rdoc_files = FileList['lib/**/*.rb']
+#  #rdoc.rdoc_files.include 'README'
+#
+#  rdoc.options += [
+#    '-SHN',
+#  ]
+#end
 

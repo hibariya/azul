@@ -2,6 +2,7 @@ module Azul
   class Shelf
     class Work
       attr_accessor :id, :title, :person
+      # 単純な通し番号をつけたい
       attr_accessor :rownum
 
       def initialize(args)
