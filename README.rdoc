@@ -1,4 +1,26 @@
 = Azul
-
   青空文庫のターミナルビューア
+
+== 基本的な使い方
+  出力をパイプでつなげられます 
+    command [argument, [argument..]] [| linux command [| linux command..]]
+
+== コマンド一覧
+  IDはリスト各行の先頭に表示されるアルファベット文字(列)
+    help                                   ヘルプを表示
+    search (all|work|person|\s) KEYWORD    KEYWORDでタイトル,作者,両方を検索
+    take,select ID                         IDの著者の作品でヒットしたタイトル一覧を表示
+    list,ls                                現在選択している著者のタイトル一覧を表示
+    open,view ID                           IDの作品を表示
+    set KEY VALUE                          設定値を変更して画面に反映
+    reload                                 現在の設定値を画面に反映
+    updatedb                               タイトル,著者のリストを青空文庫から取得しなおす
+
+== 設定ファイル
+  デフォルトの動きを変更できます
+    % cat ~/.azul/config
+    Azul::Terminal.config.start do 
+      color 34          # 表示色を変更
+      editing_mode 'vi' # キーバインドをviライクに変更
+    end
 
