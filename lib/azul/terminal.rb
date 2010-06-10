@@ -58,6 +58,9 @@ module Azul
           Terminal.shelf.reload
           nil end
 
+        def help(args=nil)
+          File.open(README){|f| f.read } end
+
         # sub commands {{{
         def person(args=nil); 'usage: search person [person word]' end
         def all(args=nil); 'usage: search all [search word]' end
@@ -80,16 +83,8 @@ module Azul
         Readline.__send__("#{e}_editing_mode")
       end
 
-      def config_default
-        config = Config.new
-        config.start do
-          base_uri 'http://mirror.aozora.gr.jp/'
-          color 34
-        end
-      end
-
       def ready
-        config, shelf = config_default, Shelf.new
+        config, shelf = Config.new, Shelf.new
         shelf.config = config
         self.class.__send__(:define_method, :config){ config }
         self.class.__send__(:define_method, :shelf){ shelf }

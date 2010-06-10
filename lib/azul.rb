@@ -16,6 +16,7 @@ require 'expect'
 module Azul
   APP_NAME = 'Azul'
   VERSION = File.read(File.join(File.dirname(__FILE__), '../VERSION')).strip
+  README = File.join(File.dirname(__FILE__), '../README')
   LOCAL_FILES_DIR = File.expand_path('~/.azul')
 
   __here = File.dirname __FILE__
