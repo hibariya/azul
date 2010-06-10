@@ -49,7 +49,6 @@ module Azul
         end
 
         def reload(args=nil)
-          puts Terminal.config.attributes.inspect
           Terminal.change_editing_mode Terminal.config.editing_mode || 'emacs'
           Terminal.change_color Terminal.config.color || 0
           nil
