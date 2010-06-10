@@ -2,7 +2,7 @@ Azul: 青空文庫のターミナルビューア
 
 基本的な使い方
   出力をパイプでつなげられます 
-  command [arg, [arg..]] [| linux command [| linux command..]]
+  command [argument, [argument..]] [| linux command [| linux command..]]
 
 コマンド一覧
   IDはリスト各行の先頭に表示されるアルファベット文字(列)
@@ -19,7 +19,7 @@ Azul: 青空文庫のターミナルビューア
   デフォルトの動きを変更できます
   % cat ~/.azul/config
   Azul::Terminal.config.start do 
-    color 34        # 表示色を変更
-    editing_mode vi # キーバインドをviライクに変更
+    color 34          # 表示色を変更
+    editing_mode 'vi' # キーバインドをviライクに変更
   end
 

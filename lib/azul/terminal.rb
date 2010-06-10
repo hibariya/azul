@@ -61,6 +61,9 @@ module Azul
         def help(args=nil)
           File.open(README){|f| f.read } end
 
+        def execute(args)
+          system("#{args.first}"); nil end
+
         # sub commands {{{
         def person(args=nil); 'usage: search person [person word]' end
         def all(args=nil); 'usage: search all [search word]' end
@@ -91,8 +94,8 @@ module Azul
         load CONF_FILE if File.exist? CONF_FILE
         shelf.load
 
-        change_editing_mode config.editing_mode || 'emacs'
-        change_color config.color || 0
+        change_editing_mode config.editing_mode
+        change_color config.color
         Readline.completion_proc = lambda do |word|
           (Commands.methods-methods).
             grep(/\A#{Regexp.quote word}/)
@@ -102,8 +105,9 @@ module Azul
         while buf = Readline.readline("#{APP_NAME}> ", true)
           begin
             cmd, *pipes = buf.to_s.split(/\|/).map!{|m|m.strip}
-            cmd, *args = cmd.to_s.split(/\s/).inject([]){|r,c|c.empty?? r: r<<c}
+            cmd, *args = cmd.to_s.split(/\s/).inject([]){|r,c|c.empty?? r: r<<c.strip}
             next if cmd.nil?
+            cmd = 'execute' if cmd=='!'
             res = Commands.__send__(cmd, args) 
             resfile = File.join(config.cache_dir, '.cache')
             File.open(resfile, 'w'){|f| f.puts res }

@@ -6,7 +6,9 @@ module Azul
         :database => File.join(LOCAL_FILES_DIR, 'database'),
         :database_uri => 'http://mirror.aozora.gr.jp/index_pages/list_person_all.zip',
         :person_uri => 'http://mirror.aozora.gr.jp/cards/%s/',
-        :card_uri => 'http://mirror.aozora.gr.jp/cards/%s/card%s.html'
+        :card_uri => 'http://mirror.aozora.gr.jp/cards/%s/card%s.html',
+        :color => 34,
+        :editing_mode => 'emacs'
       }
     end
 
