@@ -1,9 +1,9 @@
 module Azul
   class Shelf
     __here = File.dirname __FILE__
-    require File.join __here, 'shelf/raw_work'
-    require File.join __here, 'shelf/work'
-    require File.join __here, 'shelf/person'
+    require File.join __here, 'shelf', 'raw_work'
+    require File.join __here, 'shelf', 'work'
+    require File.join __here, 'shelf', 'person'
 
     attr_reader :database, :works
     attr_accessor :config, :persons
