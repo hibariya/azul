@@ -41,7 +41,8 @@ module Azul
     # 書庫から文字列を検索してヒットした行を配列で返す
     #
     def grep(word)
-      @database.scan /.*#{word}.*/
+      @database.scan /.*#{word}.*\n/iu
+      #@database.split(/\n/).find_all{|r| r =~ /#{word}/iu }
     end
 
     #
@@ -50,7 +51,7 @@ module Azul
     #
     def search(args={})
       args = {:work=>'', :person=>'', :all=>''}.merge(args)
-      mode, word = args.inject([]){|r,c|c.last.empty?? r: c}
+      mode, word = args.inject([:all,'']){|r,c|c.last.empty?? r: c}
       @persons = []
       @works = []
       __send__('search_'+mode.to_s, word, 
@@ -106,10 +107,9 @@ module Azul
     def create_database
       Zip::Archive.open_buffer(URI.parse(config.database_uri).read) do |zip|
         zip.fopen(zip.get_name(0)) do |csv|
-          data =  aozora_to_utf8 csv.read
           Dir.mkdir(config.cache_dir) unless File.directory?(config.cache_dir)
           File.open(config.database, 'w') do |f|
-            f.write data
+            f.write aozora_to_utf8(csv.read).split(/\r\n|\r|\n/)[1..-1].join("\n")
           end
         end
       end

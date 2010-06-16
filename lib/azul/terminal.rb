@@ -44,6 +44,8 @@ module Azul
                    (pipes.to_s.empty?? '': '|'+pipes.join('|'))) unless res.to_s.empty?
           rescue NoMethodError => e
             puts "Command #{cmd} not defined."
+            puts "raised: #{e.class} #{e.message}"
+            puts $@
           rescue OpenURI::HTTPError => e
             puts "HTTP Error."
           rescue Exception => e

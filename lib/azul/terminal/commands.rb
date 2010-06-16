@@ -3,7 +3,7 @@ module Azul
     
     class Commands
       class << self
-        def search(args)
+        def search(args=[])
           args = ['all', args.first] if args.length<2
           mode, word = args
           mode = case mode
