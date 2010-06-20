@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["hibariya"]
-  s.date = %q{2010-06-11}
+  s.date = %q{2010-06-20}
   s.default_executable = %q{azul}
   s.description = %q{aozora bunko cui viewer}
   s.email = %q{celluloid.key@gmail.com}

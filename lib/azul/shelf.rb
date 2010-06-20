@@ -80,10 +80,9 @@ module Azul
     # RawWorkを元に@personsと@worksに追加
     #
     def push_raw(raw)
-      person = @persons.find{|p|p.id==raw.person_id }||
+      person = @persons.find{|p|p.id==raw.person_id}||
         (@persons<<Person.new(:id=>raw.person_id,:name=>raw.person_name,:rownum=>@persons.length)).last
-      work = @works.find{|p|p.id==raw.work_id }||
-        (@works<<Work.new(:id=>raw.work_id,:title=>raw.work_title,:person=>person,:rownum=>@works.length)).last
+      work = (@works<<Work.new(:id=>raw.work_id,:title=>raw.work_title,:person=>person,:rownum=>@works.length)).last
       work.person ||= person
       person.works<<work
       self
